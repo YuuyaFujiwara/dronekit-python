@@ -38,6 +38,7 @@ if not connection_string:
     connection_string = sitl.connection_string()
 
 
+#(1) 機体（SITL）に接続する。
 # Connect to the Vehicle. 
 #   Set `wait_ready=True` to ensure default attributes are populated before `connect()` returns.
 print("\nConnecting to vehicle on: %s" % connection_string)
@@ -45,6 +46,7 @@ vehicle = connect(connection_string, wait_ready=True)
 
 vehicle.wait_ready('autopilot_version')
 
+#(2) パラメータを個々に取得して表示する。。
 # Get all vehicle attributes (state)
 print("\nGet all vehicle attribute values:")
 print(" Autopilot Firmware version: %s" % vehicle.version)
@@ -91,7 +93,8 @@ print(" Mode: %s" % vehicle.mode.name)    # settable
 print(" Armed: %s" % vehicle.armed)    # settable
 
 
-
+#(3) Home Locationを取得指して表示する。
+print("#(3) Home Locationを取得指して表示する。")
 # Get Vehicle Home location - will be `None` until first set by autopilot
 while not vehicle.home_location:
     cmds = vehicle.commands
@@ -103,9 +106,9 @@ while not vehicle.home_location:
 print("\n Home location: %s" % vehicle.home_location)
 
 
+#(4) Home Locationを設定
 # Set vehicle home_location, mode, and armed attributes (the only settable attributes)
-
-print("\nSet new home location")
+print("\n(4)Set new home location")
 # Home location must be within 50km of EKF home location (or setting will fail silently)
 # In this case, just set value to current location with an easily recognisable altitude (222)
 my_location_alt = vehicle.location.global_frame
@@ -119,7 +122,7 @@ cmds.download()
 cmds.wait_ready()
 print(" New Home Location (from vehicle - altitude should be 222): %s" % vehicle.home_location)
 
-
+#(5) modeを GUIDEDに設定
 print("\nSet Vehicle.mode = GUIDED (currently: %s)" % vehicle.mode.name) 
 vehicle.mode = VehicleMode("GUIDED")
 while not vehicle.mode.name=='GUIDED':  #Wait until mode has changed
@@ -142,8 +145,10 @@ while not vehicle.is_armable:
 #print " Vehicle is armed: %s" % vehicle.armed 
 
 
-# Add and remove and attribute callbacks
 
+#(6) 指定したアトリビュート変化時のコールバックサンプル
+#    attitude 変化時にコールバック
+# Add and remove and attribute callbacks
 #Define callback for `vehicle.attitude` observer
 last_attitude_cache = None
 def attitude_callback(self, attr_name, value):
@@ -166,8 +171,8 @@ print(" Remove Vehicle.attitude observer")
 # Remove observer added with `add_attribute_listener()` specifying the attribute and callback function
 vehicle.remove_attribute_listener('attitude', attitude_callback)
 
-
-        
+#(7)モード変更コールバックサンプル
+#モード変更時に呼び出される関数。        
 # Add mode attribute callback using decorator (callbacks added this way cannot be removed).
 print("\nAdd `mode` attribute callback/observer using decorator") 
 @vehicle.on_attribute('mode')   
@@ -191,7 +196,7 @@ except:
 
 
 
- 
+#(8) 何らかの アトリビュートが変化した際にコールバックする
 # Demonstrate getting callback on any attribute change
 def wildcard_callback(self, attr_name, value):
     print(" CALLBACK: (%s): %s" % (attr_name,value))
@@ -203,11 +208,11 @@ vehicle.add_attribute_listener('*', wildcard_callback)
 print(" Wait 1s so callback invoked before observer removed")
 time.sleep(1)
 
-print(" Remove Vehicle attribute observer")    
+print("\n Remove Vehicle attribute observer")    
 # Remove observer added with `add_attribute_listener()`
 vehicle.remove_attribute_listener('*', wildcard_callback)
     
-
+#(9) パラメータ読み書きサンプル
 # Get/Set Vehicle Parameters
 print("\nRead and write parameters")
 print(" Read vehicle param 'MOT_PWM_MIN': %s" % vehicle.parameters['MOT_PWM_MIN'])  # ここで例外が出る。THR_MINは無くなったらしい。MOT_PWM_MINに置き換え？
@@ -216,12 +221,16 @@ print(" Write vehicle param 'MOT_PWM_MIN' : 10")
 vehicle.parameters['MOT_PWM_MIN']=10
 print(" Read new value of param 'MOT_PWM_MIN': %s" % vehicle.parameters['MOT_PWM_MIN'])
 
+#(10) 全てのパラメータを列挙するサンプル。
+#    表示があふれるのでコメントアウト
+'''
 print("\nPrint all parameters (iterate `vehicle.parameters`):")
 for key, value in vehicle.parameters.iteritems():
     print(" Key:%s Value:%s" % (key,value))
-    
+''' 
 
-print("\nCreate parameter observer using decorator")
+#(11) パラメータ変化をデコレーターで通知する。
+print("\n(11) Create parameter observer using decorator")
 # Parameter string is case-insensitive
 # Value is cached (listeners are only updated on change)
 # Observer added using decorator can't be removed.
@@ -240,6 +249,7 @@ for x in range(1,5):
     time.sleep(1)
 
 
+＃(12)パラメータ変化をコールバックで受け取る
 #Callback function for "any" parameter
 print("\nCreate (removable) observer for any parameter using wildcard string")
 def any_parameter_callback(self, attr_name, value):
