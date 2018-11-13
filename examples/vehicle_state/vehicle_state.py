@@ -249,7 +249,7 @@ for x in range(1,5):
     time.sleep(1)
 
 
-＃(12)パラメータ変化をコールバックで受け取る
+#(12)パラメータ変化をコールバックで受け取る
 #Callback function for "any" parameter
 print("\nCreate (removable) observer for any parameter using wildcard string")
 def any_parameter_callback(self, attr_name, value):
