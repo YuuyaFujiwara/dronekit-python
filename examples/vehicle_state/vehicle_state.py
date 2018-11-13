@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+# 日本語コメント使うには先頭に　# coding: UTF-8を書く。
+#
+# 1) cygwinコンソールから、sim_vehicle.pyを実行してSITLを起動する。
+# 2) SITLで起動したMAVProxyコンソールにてポートを追加する。
+#    ※デフォルトポートはMissionPlannerとの接続で使用するため。
+#    $output add 127.0.0.1:14552
+# 3) このコードを実行する。
 """
 © Copyright 2015-2016, 3D Robotics.
 vehicle_state.py: 
-
 Demonstrates how to get and set vehicle state and parameter information, 
 and how to observe vehicle attribute (state) changes.
-
 Full documentation is provided at http://python.dronekit.io/examples/vehicle_state.html
 """
 from __future__ import print_function
@@ -24,6 +28,8 @@ args = parser.parse_args()
 connection_string = args.connect
 sitl = None
 
+
+connection_string = "127.0.0.1:14552"
 
 #Start SITL if no connection string specified
 if not connection_string:
@@ -202,15 +208,13 @@ print(" Remove Vehicle attribute observer")
 vehicle.remove_attribute_listener('*', wildcard_callback)
     
 
-
 # Get/Set Vehicle Parameters
 print("\nRead and write parameters")
-print(" Read vehicle param 'THR_MIN': %s" % vehicle.parameters['THR_MIN'])
+print(" Read vehicle param 'MOT_PWM_MIN': %s" % vehicle.parameters['MOT_PWM_MIN'])  # ここで例外が出る。THR_MINは無くなったらしい。MOT_PWM_MINに置き換え？
 
-print(" Write vehicle param 'THR_MIN' : 10")
-vehicle.parameters['THR_MIN']=10
-print(" Read new value of param 'THR_MIN': %s" % vehicle.parameters['THR_MIN'])
-
+print(" Write vehicle param 'MOT_PWM_MIN' : 10")
+vehicle.parameters['MOT_PWM_MIN']=10
+print(" Read new value of param 'MOT_PWM_MIN': %s" % vehicle.parameters['MOT_PWM_MIN'])
 
 print("\nPrint all parameters (iterate `vehicle.parameters`):")
 for key, value in vehicle.parameters.iteritems():
@@ -222,16 +226,16 @@ print("\nCreate parameter observer using decorator")
 # Value is cached (listeners are only updated on change)
 # Observer added using decorator can't be removed.
  
-@vehicle.parameters.on_attribute('THR_MIN')  
-def decorated_thr_min_callback(self, attr_name, value):
+@vehicle.parameters.on_attribute('MOT_PWM_MIN')  
+def decorated_MOT_PWM_MIN_callback(self, attr_name, value):
     print(" PARAMETER CALLBACK: %s changed to: %s" % (attr_name, value))
 
 
-print("Write vehicle param 'THR_MIN' : 20 (and wait for callback)")
-vehicle.parameters['THR_MIN']=20
+print("Write vehicle param 'MOT_PWM_MIN' : 20 (and wait for callback)")
+vehicle.parameters['MOT_PWM_MIN']=20
 for x in range(1,5):
     #Callbacks may not be updated for a few seconds
-    if vehicle.parameters['THR_MIN']==20:
+    if vehicle.parameters['MOT_PWM_MIN']==20:
         break
     time.sleep(1)
 
@@ -243,16 +247,16 @@ def any_parameter_callback(self, attr_name, value):
 
 #Add observer for the vehicle's any/all parameters parameter (defined using wildcard string ``'*'``)
 vehicle.parameters.add_attribute_listener('*', any_parameter_callback)     
-print(" Change THR_MID and THR_MIN parameters (and wait for callback)")    
+print(" Change THR_MID and MOT_PWM_MIN parameters (and wait for callback)")    
 vehicle.parameters['THR_MID']=400  
-vehicle.parameters['THR_MIN']=30
+vehicle.parameters['MOT_PWM_MIN']=30
 
 
 ## Reset variables to sensible values.
 print("\nReset vehicle attributes/parameters and exit")
 vehicle.mode = VehicleMode("STABILIZE")
 #vehicle.armed = False
-vehicle.parameters['THR_MIN']=130
+vehicle.parameters['MOT_PWM_MIN']=130
 vehicle.parameters['THR_MID']=500
 
 
@@ -265,7 +269,3 @@ if sitl is not None:
     sitl.stop()
 
 print("Completed")
-
-
-
-
