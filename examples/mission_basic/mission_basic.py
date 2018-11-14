@@ -26,7 +26,11 @@ connection_string = args.connect
 sitl = None
 
 
-#Start SITL if no connection string specified
+#connect to external SITL
+if not connection_string:
+    connection_string = "127.0.0.1:14552"
+
+#start SITL if no connection string specified:
 if not connection_string:
     import dronekit_sitl
     sitl = dronekit_sitl.start_default()
@@ -102,6 +106,7 @@ def download_mission():
 
 
 
+#新たなミッションを書き込む。
 def adds_square_mission(aLocation, aSize):
     """
     Adds a takeoff command and four waypoint commands to the current mission. 
@@ -171,13 +176,14 @@ def arm_and_takeoff(aTargetAltitude):
             break
         time.sleep(1)
 
-        
+
+#新しいミッションを作成
 print('Create a new mission (for current location)')
 adds_square_mission(vehicle.location.global_frame,50)
 
 
 # From Copter 3.3 you will be able to take off using a mission item. Plane must take off using a mission item (currently).
-arm_and_takeoff(10)
+arm_and_takeoff(50)
 
 print("Starting mission")
 # Reset mission set to first (0) waypoint
