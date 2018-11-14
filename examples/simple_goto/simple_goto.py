@@ -25,6 +25,9 @@ args = parser.parse_args()
 connection_string = args.connect
 sitl = None
 
+# SITLへ接続
+if not connection_string:
+    connection_string = "127.0.0.1:14552"
 
 # Start SITL if no connection string specified
 if not connection_string:
@@ -80,14 +83,16 @@ print("Set default/target airspeed to 3")
 vehicle.airspeed = 3
 
 print("Going towards first point for 30 seconds ...")
-point1 = LocationGlobalRelative(-35.361354, 149.165218, 20)
+#point1 = LocationGlobalRelative(-35.361354, 149.165218, 20)
+point1 = LocationGlobalRelative( 38.9751246, 141.4520860, 20)     #室根山頂
 vehicle.simple_goto(point1)
 
 # sleep so we can see the change in map
 time.sleep(30)
 
 print("Going towards second point for 30 seconds (groundspeed set to 10 m/s) ...")
-point2 = LocationGlobalRelative(-35.363244, 149.168801, 20)
+#point2 = LocationGlobalRelative(-35.363244, 149.168801, 20)
+point2 = LocationGlobalRelative( 38.9542695, 141.3870692, 20)       #奥玉あたり
 vehicle.simple_goto(point2, groundspeed=10)
 
 # sleep so we can see the change in map
