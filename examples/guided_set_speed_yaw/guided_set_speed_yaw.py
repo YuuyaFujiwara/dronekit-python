@@ -27,6 +27,8 @@ args = parser.parse_args()
 connection_string = args.connect
 sitl = None
 
+if not connection_string:
+    connection_string = "127.0.0.1:14552"
 
 #Start SITL if no connection string specified
 if not connection_string:
