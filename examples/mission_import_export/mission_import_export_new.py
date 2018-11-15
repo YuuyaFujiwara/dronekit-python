@@ -125,7 +125,7 @@ def save_mission(aFileName):
     Save a mission in the Waypoint file format 
     (http://qgroundcontrol.org/mavlink/waypoint_protocol#waypoint_file_format).
     """
-    print("\nSave mission from Vehicle to file: %s" % aFileName)    
+    print("\nSave mission from Vehicle to file: %s" % aFileName )    
     #Download mission from vehicle
     missionlist = download_mission()
     #Add file-format information
@@ -152,18 +152,29 @@ def printfile(aFileName):
             print(' %s' % line.strip())        
 
 
-backup_mission_filename = "backupedmission.txt"
-import_mission_filename = 'mpmission.txt'
-export_mission_filename = 'exportedmission.txt'
+backup_mission_filename2 = "backupedmission.txt"
+import_mission_filename2 = 'mpmission.txt'
+export_mission_filename2 = 'exportedmission.txt'
+
+
 
 #backup current mission( download and save)
-save_mission(backup_mission_filename)
+save_mission(backup_mission_filename2)
 
 #Upload mission from file
-upload_mission(import_mission_filename)
+upload_mission(import_mission_filename2)
 
 #Download mission we just uploaded and save to a file
-save_mission(export_mission_filename)
+save_mission(export_mission_filename2)
+
+upload_mission("star.txt")
+time.sleep(10)
+upload_mission("rectangle1.txt")
+time.sleep(10)
+upload_mission("pentagon1.txt")
+time.sleep(10)
+
+
 
 #Close vehicle object before exiting script
 print("Close vehicle object")
@@ -176,6 +187,6 @@ if sitl is not None:
 
 print("\nShow original and uploaded/downloaded files:")
 #Print original file (for demo purposes only)
-printfile(import_mission_filename)
+printfile(import_mission_filename2)
 #Print exported file (for demo purposes only)
-printfile(export_mission_filename)
+printfile(export_mission_filename2)
