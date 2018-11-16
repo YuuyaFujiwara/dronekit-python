@@ -151,7 +151,7 @@ def printfile(aFileName):
         for line in f:
             print(' %s' % line.strip())        
 
-
+'''
 backup_mission_filename2 = "backupedmission.txt"
 import_mission_filename2 = 'mpmission.txt'
 export_mission_filename2 = 'exportedmission.txt'
@@ -166,9 +166,13 @@ upload_mission(import_mission_filename2)
 
 #Download mission we just uploaded and save to a file
 save_mission(export_mission_filename2)
+'''
+
 
 upload_mission("star.txt")
+printfile("star.txt")
 time.sleep(10)
+
 upload_mission("rectangle1.txt")
 time.sleep(10)
 upload_mission("pentagon1.txt")
@@ -184,9 +188,10 @@ vehicle.close()
 if sitl is not None:
     sitl.stop()
 
-
+'''
 print("\nShow original and uploaded/downloaded files:")
 #Print original file (for demo purposes only)
 printfile(import_mission_filename2)
 #Print exported file (for demo purposes only)
 printfile(export_mission_filename2)
+'''
