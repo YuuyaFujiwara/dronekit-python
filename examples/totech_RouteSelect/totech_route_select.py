@@ -18,6 +18,12 @@ from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGloba
 import math
 import time
 import glob
+#from os.path import expanduser
+
+
+#print('current path: %s' % expanduser("~"))
+
+home_path = "C:/Users/YuyaFujiwara/Documents/GitHub/dronekit-python/examples/totech_RouteSelect/"
 
 
 #Set up option parsing to get connection string
@@ -175,7 +181,8 @@ def read_route( aFileName ):
         i = 0
         for line in f:
             if i == 0:  #セクションの始まりを探す
-                if not line.startswith("[Totech_route_099]"):
+                #if not line.startswith("[Totech_route_099]"):
+                if not line.startswith("QGC WPL 110"):
                     raise Exception("File is not supported WP version")
                 else:
                     i = 1
@@ -352,9 +359,87 @@ def adds_square_mission(aLocation, aSize):
     cmds.upload()
 '''
 
+
+#モード変更時コールバック関数登録
+#モード変更時に、ルート選択を実行する。        
+# Add mode attribute callback using decorator (callbacks added this way cannot be removed).
+print("\nAdd `mode` attribute callback/observer using decorator") 
+@vehicle.on_attribute('mode')   
+def decorated_mode_callback(self, attr_name, value):
+    # `attr_name` is the observed attribute (used if callback is used for multiple attributes)
+    # `attr_name` - the observed attribute (used if callback is used for multiple attributes)
+    # `value` is the updated attribute value.
+
+    print(" CALLBACK: Mode changed to", value)
+    # ModeがAutoになった場合に、ルートを決める。
+    # ルートが決まらなかったら、STABILIZEにモードを変える。
+    if value==VehicleMode("GUIDED"):
+
+        #カレントパスを表示
+
+
+        # ルートファイルを検索
+        search_rslt = False
+        mission = []
+        #for fname in glob.glob("./Routes/*.route"):
+        #for fname in glob.glob("./Routes/*.waypoints"):     #とりあえずmission plannerが出力するwaypointsファイルを読み込む
+        #tmppath = home_path +  "Routes/*.*"
+        for fname in glob.glob( home_path +  "Routes/*.waypoints"):     #とりあえずmission plannerが出力するwaypointsファイルを読み込む
+            mission = read_route(fname)
+            if mission_distance_check( mission ):
+                search_rslt = True
+                break       # Exit for
+
+        #3 機体に転送
+        if search_rslt:
+            #for debug
+            print_mission( mission )
+            upload_mission( mission )
+        else:
+            print( "No route found\n")
+            vehicle.commands.clear()
+            vehicle.mode = VehicleMode("AUTO")
+
+
+
+'''
+#Arming状態 変更時コールバック関数登録
+print("\nAdd `armed` attribute callback/observer using decorator") 
+@vehicle.on_attribute('armed')   
+def decorated_armed_callback(self, attr_name, value):
+    # `attr_name` is the observed attribute (used if callback is used for multiple attributes)
+    # `attr_name` - the observed attribute (used if callback is used for multiple attributes)
+    # `value` is the updated attribute value.
+
+    print(" CALLBACK: Armed status was changed to", value)
+'''
+
+'''
+#(?) modeをSTABLIZEに設定
+print(" Set mode=STABILIZE (currently: %s) and wait for callback" % vehicle.mode.name) 
+vehicle.mode = VehicleMode("STABILIZE")
+
+print(" Wait 2s so callback invoked before moving to next example")
+time.sleep(2)
+
+print("\n Attempt to remove observer added with `on_attribute` decorator (should fail)") 
+try:
+    vehicle.remove_attribute_listener('mode', decorated_mode_callback)
+except:
+    print(" Exception: Cannot remove observer added using decorator")
+'''
+
+
 # ここからメイン
 
+# for debug 
+# とりあえず無限ループ
+while True:
+    time.sleep(1)
+    
 
+
+'''
 # 1) 現在位置を得る
 #Vehicle_loc = vehicle.location.global_frame
 
@@ -376,7 +461,7 @@ if search_rslt:
 else:
     vehicle.commands.clear()
     print( "No route found\n")
-
+'''
 
 
 
