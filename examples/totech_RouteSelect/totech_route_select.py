@@ -24,7 +24,7 @@ import glob
 #print('current path: %s' % expanduser("~"))
 
 home_path = "C:/Users/YuyaFujiwara/Documents/GitHub/dronekit-python/examples/totech_RouteSelect/"
-
+global_flg_route_select_req = False
 
 #Set up option parsing to get connection string
 import argparse  
@@ -370,35 +370,46 @@ def decorated_mode_callback(self, attr_name, value):
     # `attr_name` - the observed attribute (used if callback is used for multiple attributes)
     # `value` is the updated attribute value.
 
+    global global_flg_route_select_req
+
     print(" CALLBACK: Mode changed to", value)
     # ModeがAutoになった場合に、ルートを決める。
     # ルートが決まらなかったら、STABILIZEにモードを変える。
     if value==VehicleMode("GUIDED"):
+        global_flg_route_select_req = True
 
-        #カレントパスを表示
 
+#
+# 自動ルート選択処理
+#
+def route_select_proc():
+    global global_flg_route_select_req
 
-        # ルートファイルを検索
-        search_rslt = False
-        mission = []
-        #for fname in glob.glob("./Routes/*.route"):
-        #for fname in glob.glob("./Routes/*.waypoints"):     #とりあえずmission plannerが出力するwaypointsファイルを読み込む
-        #tmppath = home_path +  "Routes/*.*"
-        for fname in glob.glob( home_path +  "Routes/*.waypoints"):     #とりあえずmission plannerが出力するwaypointsファイルを読み込む
-            mission = read_route(fname)
-            if mission_distance_check( mission ):
-                search_rslt = True
-                break       # Exit for
+    # ルートファイルを検索
+    search_rslt = False
+    mission = []
+    #for fname in glob.glob("./Routes/*.route"):
+    #for fname in glob.glob("./Routes/*.waypoints"):     #とりあえずmission plannerが出力するwaypointsファイルを読み込む
+    #tmppath = home_path +  "Routes/*.*"
+    for fname in glob.glob( home_path +  "Routes/*.waypoints"):     #とりあえずmission plannerが出力するwaypointsファイルを読み込む
+        mission = read_route(fname)
+        if mission_distance_check( mission ):
+            search_rslt = True
+            break       # Exit for
 
-        #3 機体に転送
-        if search_rslt:
-            #for debug
-            print_mission( mission )
-            upload_mission( mission )
-        else:
-            print( "No route found\n")
-            vehicle.commands.clear()
-            vehicle.mode = VehicleMode("AUTO")
+    # 機体に転送
+    if search_rslt:
+        #for debug
+        print_mission( mission )
+        upload_mission( mission )
+    else:
+        print( "No route found\n")
+        vehicle.commands.clear()
+        vehicle.mode = VehicleMode("MANUAL")
+
+    # reset the flag
+    global_flg_route_select_req = False 
+    
 
 
 
@@ -435,6 +446,9 @@ except:
 # for debug 
 # とりあえず無限ループ
 while True:
+    # フラグが立ったらルート選択処理を行う
+    if global_flg_route_select_req==True:
+        route_select_proc()
     time.sleep(1)
     
 
