@@ -532,6 +532,7 @@ class SystemStatus(object):
 
 class HasObservers(object):
     def __init__(self):
+        logging.basicConfig()
         self._logger = logging.getLogger(__name__)
 
         # A mapping from attr_name to a list of observers
@@ -1775,7 +1776,7 @@ class Vehicle(HasObservers):
         # check that mode is not INITIALSING
         # check that we have a GPS fix
         # check that EKF pre-arm is complete
-        return self.mode != 'INITIALISING' and self.gps_0.fix_type > 1 and self._ekf_predposhorizabs
+        return self.mode != 'INITIALISING' and (self.gps_0.fix_type is not None and self.gps_0.fix_type > 1) and self._ekf_predposhorizabs
 
     @property
     def system_status(self):
@@ -2396,6 +2397,110 @@ class Vehicle(HasObservers):
             0, 0, 0)  # param 5 ~ 7 not used
 
         self.send_mavlink(reboot_msg)
+
+    def send_calibrate_gyro(self):
+        """Request gyroscope calibration."""
+
+        calibration_command = self.message_factory.command_long_encode(
+            self._handler.target_system, 0,  # target_system, target_component
+            mavutil.mavlink.MAV_CMD_PREFLIGHT_CALIBRATION,  # command
+            0,  # confirmation
+            1,  # param 1, 1: gyro calibration, 3: gyro temperature calibration
+            0,  # param 2, 1: magnetometer calibration
+            0,  # param 3, 1: ground pressure calibration
+            0,  # param 4, 1: radio RC calibration, 2: RC trim calibration
+            0,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration
+            0,  # param 6, 2: airspeed calibration
+            0,  # param 7, 1: ESC calibration, 3: barometer temperature calibration
+        )
+        self.send_mavlink(calibration_command)
+
+    def send_calibrate_magnetometer(self):
+        """Request magnetometer calibration."""
+
+        # ArduPilot requires the MAV_CMD_DO_START_MAG_CAL command, only present in the ardupilotmega.xml definition
+        if self._autopilot_type == mavutil.mavlink.MAV_AUTOPILOT_ARDUPILOTMEGA:
+            calibration_command = self.message_factory.command_long_encode(
+                self._handler.target_system, 0,  # target_system, target_component
+                mavutil.mavlink.MAV_CMD_DO_START_MAG_CAL,  # command
+                0,  # confirmation
+                0,  # param 1, uint8_t bitmask of magnetometers (0 means all).
+                1,  # param 2, Automatically retry on failure (0=no retry, 1=retry).
+                1,  # param 3, Save without user input (0=require input, 1=autosave).
+                0,  # param 4, Delay (seconds).
+                0,  # param 5, Autoreboot (0=user reboot, 1=autoreboot).
+                0,  # param 6, Empty.
+                0,  # param 7, Empty.
+            )
+        else:
+            calibration_command = self.message_factory.command_long_encode(
+                self._handler.target_system, 0,  # target_system, target_component
+                mavutil.mavlink.MAV_CMD_PREFLIGHT_CALIBRATION,  # command
+                0,  # confirmation
+                0,  # param 1, 1: gyro calibration, 3: gyro temperature calibration
+                1,  # param 2, 1: magnetometer calibration
+                0,  # param 3, 1: ground pressure calibration
+                0,  # param 4, 1: radio RC calibration, 2: RC trim calibration
+                0,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration
+                0,  # param 6, 2: airspeed calibration
+                0,  # param 7, 1: ESC calibration, 3: barometer temperature calibration
+            )
+
+        self.send_mavlink(calibration_command)
+
+    def send_calibrate_accelerometer(self, simple=False):
+        """Request accelerometer calibration.
+
+        :param simple: if True, perform simple accelerometer calibration
+        """
+
+        calibration_command = self.message_factory.command_long_encode(
+            self._handler.target_system, 0,  # target_system, target_component
+            mavutil.mavlink.MAV_CMD_PREFLIGHT_CALIBRATION,  # command
+            0,  # confirmation
+            0,  # param 1, 1: gyro calibration, 3: gyro temperature calibration
+            0,  # param 2, 1: magnetometer calibration
+            0,  # param 3, 1: ground pressure calibration
+            0,  # param 4, 1: radio RC calibration, 2: RC trim calibration
+            4 if simple else 1,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration
+            0,  # param 6, 2: airspeed calibration
+            0,  # param 7, 1: ESC calibration, 3: barometer temperature calibration
+        )
+        self.send_mavlink(calibration_command)
+
+    def send_calibrate_vehicle_level(self):
+        """Request vehicle level (accelerometer trim) calibration."""
+
+        calibration_command = self.message_factory.command_long_encode(
+            self._handler.target_system, 0,  # target_system, target_component
+            mavutil.mavlink.MAV_CMD_PREFLIGHT_CALIBRATION,  # command
+            0,  # confirmation
+            0,  # param 1, 1: gyro calibration, 3: gyro temperature calibration
+            0,  # param 2, 1: magnetometer calibration
+            0,  # param 3, 1: ground pressure calibration
+            0,  # param 4, 1: radio RC calibration, 2: RC trim calibration
+            2,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration
+            0,  # param 6, 2: airspeed calibration
+            0,  # param 7, 1: ESC calibration, 3: barometer temperature calibration
+        )
+        self.send_mavlink(calibration_command)
+
+    def send_calibrate_barometer(self):
+        """Request barometer calibration."""
+
+        calibration_command = self.message_factory.command_long_encode(
+            self._handler.target_system, 0,  # target_system, target_component
+            mavutil.mavlink.MAV_CMD_PREFLIGHT_CALIBRATION,  # command
+            0,  # confirmation
+            0,  # param 1, 1: gyro calibration, 3: gyro temperature calibration
+            0,  # param 2, 1: magnetometer calibration
+            1,  # param 3, 1: ground pressure calibration
+            0,  # param 4, 1: radio RC calibration, 2: RC trim calibration
+            0,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration
+            0,  # param 6, 2: airspeed calibration
+            0,  # param 7, 1: ESC calibration, 3: barometer temperature calibration
+        )
+        self.send_mavlink(calibration_command)
 
 
 class Gimbal(object):
