@@ -30,14 +30,16 @@ parser.add_argument('--connect',
 args = parser.parse_args()
 
 connection_string = args.connect
-sitl = None
-
-
-#Start SITL if no connection string specified
 if not connection_string:
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default()
-    connection_string = sitl.connection_string()
+    connection_string = "127.0.0.1:14552"       #udp
+
+#sitl = None
+
+##Start SITL if no connection string specified
+#if not connection_string:
+#    import dronekit_sitl
+#    sitl = dronekit_sitl.start_default()
+#    connection_string = sitl.connection_string()
 
 
 # Connect to the Vehicle
@@ -61,7 +63,7 @@ time.sleep(5)
 #Close vehicle object before exiting script
 print("Close vehicle object")
 vehicle.close()
-
-# Shut down simulator if it was started.
-if sitl is not None:
-    sitl.stop()
+print("Finished!!!\n")
+## Shut down simulator if it was started.
+#if sitl is not None:
+#    sitl.stop()
