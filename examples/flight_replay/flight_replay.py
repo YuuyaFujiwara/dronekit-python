@@ -56,6 +56,7 @@ def distance_to_current_waypoint():
     distancetopoint = get_distance_metres(vehicle.location.global_frame, targetWaypointLocation)
     return distancetopoint
 
+
 def position_messages_from_tlog(filename):
     """
     Given telemetry log, get a series of wpts approximating the previous flight
