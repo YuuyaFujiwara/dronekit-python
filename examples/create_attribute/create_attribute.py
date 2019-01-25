@@ -53,10 +53,19 @@ def raw_imu_callback(self, attr_name, value):
     # value == vehicle.raw_imu
     print(value)
 
-vehicle.add_attribute_listener('raw_imu', raw_imu_callback)
+# 
+def servo_output_raw_callback( self, attr_name, value ):
+    # attr_name == 'servo_output_raw'
+    # value == vehicle.servo_output_raw
+    print(value)
+
+
+
+#vehicle.add_attribute_listener('raw_imu', raw_imu_callback)
+vehicle.add_attribute_listener('servo_output_raw', servo_output_raw_callback)
 
 print('Display RAW_IMU messages for 5 seconds and then exit.')
-time.sleep(5)
+time.sleep(10)
 
 #The message listener can be unset using ``vehicle.remove_message_listener``
 
