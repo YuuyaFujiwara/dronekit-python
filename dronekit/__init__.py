@@ -1142,21 +1142,17 @@ class Vehicle(HasObservers):
         # All keys are strings.
         self._channels = Channels(self, 8)
 
-        @self.on_message('RC_CHANNELS_RAW')
+        @self.on_message(['RC_CHANNELS_RAW', 'RC_CHANNELS'])
         def listener(self, name, m):
             def set_rc(chnum, v):
                 '''Private utility for handling rc channel messages'''
                 # use port to allow ch nums greater than 8
-                self._channels._update_channel(str(m.port * 8 + chnum), v)
+                port = 0 if name == "RC_CHANNELS" else m.port
+                self._channels._update_channel(str(port * 8 + chnum), v)
 
-            set_rc(1, m.chan1_raw)
-            set_rc(2, m.chan2_raw)
-            set_rc(3, m.chan3_raw)
-            set_rc(4, m.chan4_raw)
-            set_rc(5, m.chan5_raw)
-            set_rc(6, m.chan6_raw)
-            set_rc(7, m.chan7_raw)
-            set_rc(8, m.chan8_raw)
+            for i in range(1, (18 if name == "RC_CHANNELS" else 8)+1):
+                set_rc(i, getattr(m, "chan{}_raw".format(i)))
+
             self.notify_attribute_listeners('channels', self.channels)
 
         self._voltage = None
@@ -2542,6 +2538,13 @@ class Gimbal(object):
             self._yaw = m.pointing_c / 100.0
             vehicle.notify_attribute_listeners('gimbal', vehicle.gimbal)
 
+        @vehicle.on_message('MOUNT_ORIENTATION')
+        def listener(vehicle, name, m):
+            self._pitch = m.pitch
+            self._roll = m.roll
+            self._yaw = m.yaw
+            vehicle.notify_attribute_listeners('gimbal', vehicle.gimbal)
+
     @property
     def pitch(self):
         """
@@ -3002,19 +3005,24 @@ class CommandSequence(object):
         self._vehicle._wploader.add(cmd, comment='Added by DroneKit')
         self._vehicle._wpts_dirty = True
 
-    def upload(self):
+    def upload(self, timeout=None):
         """
         Call ``upload()`` after :py:func:`adding <CommandSequence.add>` or :py:func:`clearing <CommandSequence.clear>` mission commands.
 
         After the return from ``upload()`` any writes are guaranteed to have completed (or thrown an
         exception) and future reads will see their effects.
+
+        :param int timeout: The timeout for uploading the mission. No timeout if not provided or set to None.
         """
         if self._vehicle._wpts_dirty:
             self._vehicle._master.waypoint_clear_all_send()
+            start_time = time.time()
             if self._vehicle._wploader.count() > 0:
                 self._vehicle._wp_uploaded = [False] * self._vehicle._wploader.count()
                 self._vehicle._master.waypoint_count_send(self._vehicle._wploader.count())
                 while False in self._vehicle._wp_uploaded:
+                    if timeout and time.time() - start_time > timeout:
+                        raise TimeoutError
                     time.sleep(0.1)
                 self._vehicle._wp_uploaded = None
             self._vehicle._wpts_dirty = False
@@ -3082,6 +3090,7 @@ def connect(ip,
             baud=115200,
             heartbeat_timeout=30,
             source_system=255,
+            source_component=0,
             use_native=False):
     """
     Returns a :py:class:`Vehicle` object connected to the address specified by string parameter ``ip``.
@@ -3118,6 +3127,7 @@ def connect(ip,
     :param int heartbeat_timeout: Connection timeout value in seconds (default is 30s).
         If a heartbeat is not detected within this time an exception will be raised.
     :param int source_system: The MAVLink ID of the :py:class:`Vehicle` object returned by this method (by default 255).
+    :param int source_component: The MAVLink Component ID fo the :py:class:`Vehicle` object returned by this method (by default 0).
     :param bool use_native: Use precompiled MAVLink parser.
 
         .. note::
@@ -3142,7 +3152,7 @@ def connect(ip,
     if not vehicle_class:
         vehicle_class = Vehicle
 
-    handler = MAVConnection(ip, baud=baud, source_system=source_system, use_native=use_native)
+    handler = MAVConnection(ip, baud=baud, source_system=source_system, source_component=source_component, use_native=use_native)
     vehicle = vehicle_class(handler)
 
     if status_printer:
