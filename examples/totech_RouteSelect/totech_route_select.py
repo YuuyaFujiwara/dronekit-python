@@ -360,6 +360,42 @@ def adds_square_mission(aLocation, aSize):
 '''
 
 
+#パラメータ変更時コールバック関数登録
+#MOMIMAKI_RT_CTRLパラメータ変更時に、ルート管理を行う。
+# ※このパラメータはdronekit-pythonからのルート管理用。船体では使用しない。        
+# Add mode attribute callback using decorator (callbacks added this way cannot be removed).
+print("\nAdd `MOMIMAKI_RT_CTRL` attribute callback/observer using decorator") 
+@vehicle.parameters.on_attribute('MOMIMAKI_RT_CTRL')   
+def decorated_routectrl_callback(self, attr_name, value):
+    # `attr_name` is the observed attribute (used if callback is used for multiple attributes)
+    # `attr_name` - the observed attribute (used if callback is used for multiple attributes)
+    # `value` is the updated attribute value.
+
+    global global_flg_route_select_req
+
+    print(" CALLBACK: 'MOMIMAKI_RT_CTRL' changed to", value)
+
+    # パラメータ値により動作を分ける
+    if value == 0 :
+        print(" value == zero" )
+    elif value == 9999 :
+        # 全ルートクリア
+        print(" clear all route files(not yet)" )
+    elif value == 1:
+        # 現在のルートをファイルに保存
+        print(" save to file current route(not yet)" )
+    elif value == 2:
+        print(" value == 2nd" )
+    elif value == 3:
+        print(" value == 3rd" )
+    else :
+        print(" value == other" )
+
+
+
+
+
+
 #モード変更時コールバック関数登録
 #モード変更時に、ルート選択を実行する。        
 # Add mode attribute callback using decorator (callbacks added this way cannot be removed).
